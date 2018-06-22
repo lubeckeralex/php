@@ -1,0 +1,16 @@
+{
+    "php.validate.executablePath": "/Applications/MAMP/bin/php/php7.1.8/bin/php",
+    //"php.executablePath": "/Applications/MAMP/bin/php/php7.1.8/bin/php",
+    "php.suggest.basic": false,
+    "workbench.iconTheme": "vscode-great-icons",
+    "git.ignoreMissingGitWarning": true,
+    "workbench.activityBar.visible": true,
+    "workbench.list.openMode": "doubleClick",
+    "workbench.statusBar.feedback.visible": false,
+    "workbench.fontAliasing": "auto",
+    "workbench.colorCustomizations": {
+        "statusBar.background": "#374046"
+    },
+    "explorer.autoReveal": false,
+    "editor.fontSize": 12
+}
