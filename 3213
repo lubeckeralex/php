@@ -1,0 +1,156 @@
+<?php
+
+function StringToDNS($dnsStr)
+{
+    $dns_adressen = preg_replace('/\s+/', ',', $dnsStr);
+    $dns_adressen = str_replace(" ","",$dns_adressen);
+    $dns_array = explode(",",$dns_adressen);
+    return $dns_array;
+}
+
+
+function pruefe_ip_a ($adresse, $vergleichsip)
+{
+	$ip = gethostbyname($adresse);
+		if (empty($ip) OR $ip !== $vergleichsip)
+		{
+			echo $adresse.' : '. $ip .'<br>';
+			return true;
+		}
+		else 
+		{
+			return false;
+		}
+}
+
+
+function pruefe_ip_mx ($adresse, $ip)
+{
+	$dns_result = dns_get_record($adresse, DNS_MX, $bla, $hierdieip);
+	foreach($dns_result as $dns_zeile => $dns_wert)
+	{
+		$dns_array[$dns_result[$dns_zeile]['target']] = 1;
+	}
+	
+	foreach($dns_array as $dns_zeile => $dns_wert)
+	{
+		$dns_result_2 = dns_get_record($dns_zeile);
+		$mailip = $dns_result_2['0']['ip'];
+		#echo '<span style=color:red;">'.$adresse.' : '. $mailip .'</span><br>';
+			
+		if (empty($mailip) OR $mailip !== $ip)
+		{
+			echo $adresse.' : '. $dns_zeile .' : '. $mailip .'<br>';
+			return true;
+		}
+		else 
+		{
+			echo '<span style=color:red;">'.$adresse.' : '. $dns_zeile .' : '. $mailip .'</span><br>';
+			return false;
+		}
+	}
+}
+
+?>
+
+
+///
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <script src="js/main.js"></script>
+    <title>neues Mini-Tool</title>
+</head>
+<body style="width:1100px; margin:0 auto;">
+    <div class="eingabe"  style="float: left;">
+        <form action="" method="post">
+            <p>Eingabefeld für mehrere Domains (durch Zeilenumbruch getrennt):</p>
+            <div>
+                <input type="radio" name="scriptname" value="a" checked="checked">A-Eintrag<br>
+                <input type="radio" name="scriptname" value="mx">MX Eintrag<br>
+            </div> 
+                <textarea id="mytext" name="adressen_list" cols="50" rows="50" placeholder="fügen sie bitte DNS ein."><?php if(isset($_POST['adressen_list']))echo($_POST['adressen_list']);?></textarea>
+                <button style="color: red;" onClick="loeschFunction('mytext');">DNS Löschen</button>
+                <br>
+                ip:
+                <input name="ip_adresse" type="text" placeholder="fügen sie bitte ip ein." value="<?php if(isset($_POST['ip_adresse']))echo($_POST['ip_adresse']);?>">
+            <input type="submit" style="color: green; padding: 2px 5px;"  value="Prüfen" onClick="dnscheck();">
+
+            <input type="checkbox" id="checkbox1" name="checkbox1" value="checkbox1" checked>negativ
+            <input type="checkbox" id="checkbox2" name="checkbox2" value="checkbox2" checked>positiv<br>
+        </form>
+        
+    </div>
+    <div style="background-image: url('logo.jpeg'); width: 100px; height:50px; float: right; background-size: contain; margin-bottom: -10px;"></div>
+<?php
+if(isset($_POST['adressen_list']) && isset($_POST['ip_adresse']))
+{
+    include_once 'functions.php';
+
+    $vergleichsip = $_POST['ip_adresse'];
+    $adressen_list = $_POST['adressen_list'];
+    $dns_array = StringToDNS($adressen_list);
+    echo'<div id="ausgabe" style="float: right;">';
+    if ((count($dns_array) == 1) && ($dns_array[0] == '' )) 
+    {
+        end();
+    }
+    else
+    {
+        if(isset($_POST['adressen_list']) && isset($_POST['ip_adresse']))
+        {
+            echo '<div id="negativ">';
+            echo '<h3 style="color: red;">Domains deren ' . ucfirst($_POST['scriptname']) . '-Eintrag nicht auf die '.$vergleichsip.' verweist: </h3>';
+            $funname = 'pruefe_ip_' . $_POST['scriptname'];
+            $foo = 0;
+            $i = 0;
+            $arrayName = array();
+            echo('<p style="color: red;">');
+            foreach ($dns_array as $adr)
+            {
+                if ($funname($adr,$vergleichsip))
+                {
+                    $foo = $foo+1;
+                }
+                else
+                {
+                    $arrayName[$i] = $adr;
+                        $i = $i+1;
+                }
+            }
+            echo('</p>');
+            echo '</div>';
+            echo '<div id="positiv">';
+            echo '<hr>';
+            echo '<h3 style="color: green; margin-top: 30px; margin-bottom: -15px;">Domains deren ' . ucfirst($_POST['scriptname']) . '-Eintrag auf die '.$vergleichsip.' verweist: </h3>';
+            echo('<p style="color: green;" >');
+            while (($i > 0) && isset($_POST['checkbox2'])) {
+                echo ($arrayName[$i] . '<br>');
+                $i--;
+            }
+            echo('</p>');
+            echo '<div>';
+        }
+    }
+    echo '</div>';
+}
+?>
+</body>
+<script>
+    function dnscheck(){
+        if(document.getElementById('mytext').value == "")
+            {
+                alert('Die DNSListe ist leer!');
+                loeschFunction('mytext');
+            }
+        }
+    function loeschFunction(inpId){
+        document.getElementById(inpId).value = "";
+        };
+</script>
+</html>
